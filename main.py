@@ -49,7 +49,7 @@ class Chat:
                 logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
 
                 self.subscriber.send("new_message", {
-                    'timestamp': timestamp,
+                    'datetime': date,
                     'author': author,
                     'text': text
                 })
@@ -78,7 +78,7 @@ class Chat:
                 logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
 
                 self.subscriber.send("private_message", {
-                    'timestamp': timestamp,
+                    'datetime': date,
                     'channel': author,
                     'author': sender,
                     'text': text
