@@ -120,6 +120,7 @@ class TestApp(npyscreen.StandardApp):
         F.wCommand.add_handlers({curses.ascii.NL: self.entered})
         F.users.add_handlers({curses.ascii.NL: self.open_chat})
         F.add_handlers({"^P": self.next_chat})
+        F.wStatus2.value = f"({self.x.username}) "
 
     def entered(self, nop):
         F = self.get_active_chat()
@@ -164,7 +165,7 @@ class TestApp(npyscreen.StandardApp):
         F.wMain.display()
 
     def on_private_message(self, evt):
-        F = self.get_chat(evt.payload['author'])
+        F = self.get_chat(evt.payload['channel'])
         F.wMain.buffer(["{timestamp} {author}: {text}".format(**evt.payload)], True, True)
         F.wMain.display()
 

@@ -79,7 +79,8 @@ class Chat:
 
                 self.subscriber.send("private_message", {
                     'timestamp': timestamp,
-                    'author': author,
+                    'channel': author,
+                    'author': sender,
                     'text': text
                 })
             else:
