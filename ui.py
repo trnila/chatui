@@ -70,8 +70,10 @@ class User:
 
 
 class ChatApp(npyscreen.StandardApp):
-    def __init__(self):
+    def __init__(self, chat):
         super().__init__()
+        self.chat = chat
+        self.chat.subscriber = self
         self.opened_chats = ['MAIN']
         self.current_chat = 0
 
@@ -91,7 +93,7 @@ class ChatApp(npyscreen.StandardApp):
             "^P": self.next_chat,
             "^C": self.next_chat
         })
-        F.wStatus2.value = f"({self.x.username}) "
+        F.wStatus2.value = f"({self.chat.username}) "
 
     def entered(self, nop):
         try:
@@ -103,11 +105,11 @@ class ChatApp(npyscreen.StandardApp):
                 cmd = args.pop(0)
 
                 if cmd == '/msg':
-                    self.x.send(' '.join(args[1:]), args[0])
+                    self.chat.send(' '.join(args[1:]), args[0])
                 else:
                     logging.info("Unknown command %s", cmd)
             else:
-                self.x.send(message, F.wStatus1.value.replace('#', ''))
+                self.chat.send(message, F.wStatus1.value.replace('#', ''))
             F.wCommand.value = ""
             F.wMain.update()
         except Exception as e:

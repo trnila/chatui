@@ -99,9 +99,7 @@ parser.add_argument('--server', default='localhost')
 options = parser.parse_args()
 
 chat = Chat(options)
-App = ui.ChatApp()
-chat.subscriber = App
-App.x = chat
+App = ui.ChatApp(chat)
 
 t = threading.Thread(target=chat.connect)
 t.daemon = True
