@@ -17,6 +17,8 @@ class Chat:
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
 
+        self.client.will_set(f'/mschat/status/{self.username}', 'offline', qos=2, retain=True)
+
 
     def connect(self):
         time.sleep(1)
@@ -34,9 +36,7 @@ class Chat:
         try:
             logging.debug("Connected")
             client.subscribe("/mschat/#")
-            client.will_set(f'/mschat/status/{self.username}', 'offline', qos=2, retain=True)
-            client.publish(f'/mschat/status/{self.username}', 'online')
-            self.send("cus", "all")
+            client.publish(f'/mschat/status/{self.username}', 'online', qos=2, retain=True)
         except Exception as e:
             logging.exception(e)
 
