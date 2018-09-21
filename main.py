@@ -26,6 +26,8 @@ class Chat:
 
     def send(self, msg, dst):
         msg = "{} {}".format(int(time.time()), msg)
+        if dst != 'all':
+            dst = f'user/{dst}'
         self.client.publish(f'/mschat/{dst}/{self.username}', msg)
 
     def _on_connect(self, client, userdata, flags, rc):
@@ -59,6 +61,27 @@ class Chat:
                     'user': author,
                     'status': status
                 })
+            elif msg.topic.startswith('/mschat/user/'):
+                topic = msg.topic.replace('/mschat/user/', '')
+                receiver, sender = topic.split('/', 2)
+
+                if receiver == self.username:
+                    author = sender
+                elif sender == self.username:
+                    author = receiver
+                else:
+                    logging.info("msg not for me!")
+                    return
+
+                timestamp, text = msg.payload.decode('utf-8').split(' ', 1)
+                date = datetime.datetime.fromtimestamp(int(timestamp))
+                logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
+
+                self.subscriber.send("private_message", {
+                    'timestamp': timestamp,
+                    'author': author,
+                    'text': text
+                })
             else:
                 logging.debug(msg.topic, msg.payload)
         except Exception as e:
@@ -69,7 +92,7 @@ logging.basicConfig(level=logging.DEBUG, filename='/tmp/log')
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--username', default='daniel_' + str(random.randint(0, 10000)))
+parser.add_argument('--username', default='daniel_' + str(random.randint(0, 10)))
 parser.add_argument('--server', default='localhost')
 
 options = parser.parse_args()

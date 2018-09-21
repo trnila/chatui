@@ -91,36 +91,81 @@ class TestForm(FormMutt):
     #MAIN_WIDGET_CLASS = TestListClass
     pass
 
+class User:
+    def __init__(self, user, status):
+        self.user = user
+        self.status = status
+
+    def __str__(self):
+        return f"[{self.status}] {self.user}"
+
 class TestApp(npyscreen.StandardApp):
+    def __init__(self):
+        super().__init__()
+        self.opened_chats = ['MAIN']
+        self.current_chat = 0
+
     def onStart(self):
         logging.info(threading.current_thread())
 
-        self.addForm("MAIN", TestForm)
-        F = self.getForm("MAIN")
-        F.wStatus1.value = "Status Line "
-        F.wStatus2.value = "Second Status Line "
-        F.wMain.values   = []
+        F = self.addForm("MAIN", TestForm)
+        self.setup_chat(F, "#all")
 
-        self.add_event_hander("new_message", self.ev_test_event_handler)
+        self.add_event_hander("new_message", self.on_message)
         self.add_event_hander("status", self.on_status)
+        self.add_event_hander("private_message", self.on_private_message)
 
+    def setup_chat(self, F, channel):
+        F.wStatus1.value = channel
         F.wCommand.add_handlers({curses.ascii.NL: self.entered})
+        F.users.add_handlers({curses.ascii.NL: self.open_chat})
+        F.add_handlers({"^P": self.next_chat})
 
     def entered(self, nop):
-        F = self.getForm("MAIN")
-        self.x.send(F.wCommand.value, 'all')
+        F = self.get_active_chat()
+        self.x.send(F.wCommand.value, F.wStatus1.value.replace('#', ''))
         F.wCommand.value = ""
         F.wMain.update()
 
+    def get_active_chat(self):
+        return self.getForm(self.opened_chats[self.current_chat])
+
+    def next_chat(self, nop):
+        self.current_chat = (self.current_chat + 1) % len(self.opened_chats)
+        self.switchForm(self.opened_chats[self.current_chat])
+
+    def open_chat(self, nop):
+        F = self.getForm("MAIN")
+        selected = F.users.values[F.users.cursor_line]
+        self.get_chat(selected.user)
+        name = f"CHAT/{selected.user}"
+        self.current_chat = self.opened_chats.index(name)
+        self.switchForm(name)
+
+    def get_chat(self, user):
+        name = f"CHAT/{user}"
+        try:
+            return self.getForm(name)
+        except KeyError as e:
+            self.opened_chats.append(name)
+            form = self.addForm(name, TestForm)
+            self.setup_chat(form, user)
+            return form
+
     def on_status(self, evt):
         F = self.getForm("MAIN")
-        F.users.values.append("[{status}] {user}".format(**evt.payload))
+        F.users.values.append(User(evt.payload['user'], evt.payload['status']))
         F.users.display()
 
-    def ev_test_event_handler(self, evt):
+    def on_message(self, evt):
         F = self.getForm("MAIN")
         F.wMain.buffer(["{timestamp} {author}: {text}".format(**evt.payload)], True, True)
         F.wMain.update()
+        F.wMain.display()
+
+    def on_private_message(self, evt):
+        F = self.get_chat(evt.payload['author'])
+        F.wMain.buffer(["{timestamp} {author}: {text}".format(**evt.payload)], True, True)
         F.wMain.display()
 
     def send(self, event, payload):
