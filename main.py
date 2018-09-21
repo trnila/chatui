@@ -99,7 +99,7 @@ parser.add_argument('--server', default='localhost')
 options = parser.parse_args()
 
 chat = Chat(options)
-App = ui.TestApp()
+App = ui.ChatApp()
 chat.subscriber = App
 App.x = chat
 
