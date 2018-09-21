@@ -104,6 +104,10 @@ chat.subscriber = App
 App.x = chat
 
 t = threading.Thread(target=chat.connect)
+t.daemon = True
 t.start()
 
-App.run()
+try:
+    App.run()
+except KeyboardInterrupt as e:
+    pass

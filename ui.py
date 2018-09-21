@@ -119,7 +119,10 @@ class TestApp(npyscreen.StandardApp):
         F.wStatus1.value = channel
         F.wCommand.add_handlers({curses.ascii.NL: self.entered})
         F.users.add_handlers({curses.ascii.NL: self.open_chat})
-        F.add_handlers({"^P": self.next_chat})
+        F.add_handlers({
+            "^P": self.next_chat,
+            "^C": self.next_chat
+        })
         F.wStatus2.value = f"({self.x.username}) "
 
     def entered(self, nop):
