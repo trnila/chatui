@@ -5,6 +5,7 @@ import logging
 import os
 import threading
 import queue
+import re
 
 class FormMutt(npyscreen.fmForm.FormBaseNew):
     BLANK_LINES_BASE     = 0
@@ -126,10 +127,24 @@ class TestApp(npyscreen.StandardApp):
         F.wStatus2.value = f"({self.x.username}) "
 
     def entered(self, nop):
-        F = self.get_active_chat()
-        self.x.send(F.wCommand.value, F.wStatus1.value.replace('#', ''))
-        F.wCommand.value = ""
-        F.wMain.update()
+        try:
+            F = self.get_active_chat()
+            message = F.wCommand.value
+
+            if message.startswith('/'):
+                args = message.split(' ')
+                cmd = args.pop(0)
+
+                if cmd == '/msg':
+                    self.x.send(' '.join(args[1:]), args[0])
+                else:
+                    logging.info("Unknown command %s", cmd)
+            else:
+                self.x.send(message, F.wStatus1.value.replace('#', ''))
+            F.wCommand.value = ""
+            F.wMain.update()
+        except Exception as e:
+            logging.exception(e)
 
     def get_active_chat(self):
         return self.getForm(self.opened_chats[self.current_chat])
