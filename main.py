@@ -11,6 +11,7 @@ import logging
 class Chat:
     def __init__(self, options):
         self.username = options.username
+        self.options = options
 
 
         self.client = mqtt.Client(client_id=self.username)
@@ -19,11 +20,11 @@ class Chat:
 
         self.client.will_set(f'/mschat/status/{self.username}', 'offline', qos=2, retain=True)
 
-
     def connect(self):
-        time.sleep(1)
-        # pcfeib425t.vsb.cz
-        self.client.connect("localhost", 1883, 60)
+        try:
+            self.client.connect(self.options.server, self.options.port, 60)
+        except ConnectionRefusedError as e:
+            logging.exception(e)
         self.client.loop_forever()
 
     def send(self, msg, dst):
@@ -95,6 +96,7 @@ logging.basicConfig(level=logging.DEBUG, filename='/tmp/log')
 parser = argparse.ArgumentParser()
 parser.add_argument('--username', default='daniel_' + str(random.randint(0, 10)))
 parser.add_argument('--server', default='localhost')
+parser.add_argument('--port', default=1883, type=int)
 
 options = parser.parse_args()
 
