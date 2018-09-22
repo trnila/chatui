@@ -4,6 +4,30 @@ import curses
 import logging
 
 
+class TabWidget(npyscreen.widget.Widget):
+    def __init__(self, screen, **keywords):
+        super().__init__(screen, **keywords)
+
+    def update(self, clear=True):
+        x = 0
+
+        app: ChatApp = self.find_parent_app()
+
+        for item in app.opened_chats:
+            color = 0
+            if app.opened_chats[app.current_chat] == item:
+                color = self.parent.theme_manager.findPair(self, 'IMPORTANT') | curses.A_BOLD
+
+            label = item
+            if label == 'MAIN':
+                label = '#all'
+            else:
+                label = item.replace('CHAT/', '')
+
+            self.parent.curses_pad.addstr(0, x, label, color)
+            x += len(label) + 2
+
+
 class ChatForm(npyscreen.fmForm.FormBaseNew):
     BLANK_LINES_BASE = 0
     BLANK_COLUMNS_RIGHT = 0
@@ -27,6 +51,8 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
             relx=0,
             editable=False
         )
+
+        self.add(TabWidget)
 
         self.wMain = self.add(
             npyscreen.wgmultiline.BufferPager,
@@ -139,8 +165,8 @@ class ChatApp(npyscreen.StandardApp):
         try:
             return self.getForm(name)
         except KeyError as e:
-            self.opened_chats.append(name)
             form = self.addForm(name, ChatForm)
+            self.opened_chats.append(name)
             self.setup_chat(form, user)
             return form
 
