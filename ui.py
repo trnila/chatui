@@ -128,7 +128,9 @@ class ChatApp(npyscreen.StandardApp):
     def entered(self, nop):
         try:
             F = self.get_active_chat()
-            message = F.wCommand.value
+            message = F.wCommand.value.strip()
+            if not message:
+                return
 
             if message.startswith('/'):
                 args = message.split(' ')
