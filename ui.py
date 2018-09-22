@@ -21,7 +21,12 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
     def create(self):
         MAXY, MAXX = self.lines, self.columns
 
-        self.wStatus1 = self.add(npyscreen.wgtextbox.Textfield, editable=False)
+        self.wStatus1 = self.add(
+            npyscreen.wgtextbox.Textfield,
+            rely=0,
+            relx=0,
+            editable=False
+        )
 
         self.wMain = self.add(
             npyscreen.wgmultiline.BufferPager,
@@ -90,8 +95,7 @@ class ChatApp(npyscreen.StandardApp):
         F.wCommand.add_handlers({curses.ascii.NL: self.entered})
         F.users.add_handlers({curses.ascii.NL: self.open_chat})
         F.add_handlers({
-            "^P": self.next_chat,
-            "^C": self.next_chat
+            "^P": self.next_chat
         })
         F.wStatus2.value = f"({self.chat.username}) "
 
