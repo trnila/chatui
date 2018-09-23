@@ -131,7 +131,8 @@ class ChatApp(npyscreen.StandardApp):
 
         F.users.add_handlers({curses.ascii.NL: self.open_chat})
         F.add_handlers({
-            "^P": self.next_chat
+            "^P": self.next_chat,
+            '^W': self.close_current_window
         })
         F.wStatus2.value = f"({self.chat.username}) "
 
@@ -148,6 +149,8 @@ class ChatApp(npyscreen.StandardApp):
 
                 if cmd == '/msg':
                     self.chat.send(' '.join(args[1:]), args[0])
+                elif cmd == '/close':
+                    self.close_current_window()
                 else:
                     logging.info("Unknown command %s", cmd)
             else:
@@ -165,7 +168,7 @@ class ChatApp(npyscreen.StandardApp):
     def get_active_chat(self):
         return self.getForm(self.opened_chats[self.current_chat])
 
-    def next_chat(self, nop):
+    def next_chat(self, nop=None):
         self.current_chat = (self.current_chat + 1) % len(self.opened_chats)
         self.switchForm(self.opened_chats[self.current_chat])
 
@@ -205,3 +208,13 @@ class ChatApp(npyscreen.StandardApp):
 
     def send(self, event, payload):
         self.queue_event(npyscreen.Event(event, payload))
+
+    def close_current_window(self, nop=None):
+        channel_name = self.opened_chats[self.current_chat]
+        if channel_name == 'MAIN':
+            return
+
+        self.removeForm(channel_name)
+        del self.opened_chats[self.current_chat]
+
+        self.next_chat()
