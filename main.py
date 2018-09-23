@@ -29,10 +29,16 @@ class Chat:
             logging.exception(e)
         self.client.loop_forever()
 
-    def send(self, msg, dst):
-        msg = "{} {}".format(int(time.time()), msg)
+    def send(self, text, dst):
         if dst != 'all':
+            self.subscriber.send("private_message", {
+                'datetime': datetime.datetime.now(),
+                'channel': dst,
+                'author': self.username,
+                'text': text
+            })
             dst = f'user/{dst}'
+        msg = "{} {}".format(int(time.time()), text)
         self.client.publish(f'/mschat/{dst}/{self.username}', msg)
 
     def _on_connect(self, client, userdata, flags, rc):
