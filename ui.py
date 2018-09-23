@@ -218,18 +218,17 @@ class ChatApp(npyscreen.StandardApp):
     def on_status(self, evt):
         F = self.getForm("MAIN")
         F.users.values = [User(user, status) for user, status in self.chat.users.items()]
-        F.users.display()
+        F.users.update()
 
     def on_message(self, evt):
         F = self.getForm("MAIN")
         F.wMain.buffer([self.MESSAGE_FORMAT.format(**evt.payload)], True, True)
         F.wMain.update()
-        F.wMain.display()
 
     def on_private_message(self, evt):
         F = self.get_chat(evt.payload['channel'])
         F.wMain.buffer([self.MESSAGE_FORMAT.format(**evt.payload)], True, True)
-        F.wMain.display()
+        F.wMain.update()
 
     def send(self, event, payload):
         self.queue_event(npyscreen.Event(event, payload))
