@@ -98,7 +98,8 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
         self.users = self.add(
             UsersInRoomWidget,
             rely=1,
-            relx=self.columns - self.USERS_COLUMNS, max_height=-2
+            relx=self.columns - self.USERS_COLUMNS,
+            max_height=-2
         )
 
         self.wStatus2.important = True
@@ -110,8 +111,10 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
         self.lines = size.lines
         self.columns = size.columns
 
+        self.wMain.max_width = self.columns - self.USERS_COLUMNS - 1
         self.wStatus2.rely = self.lines - 2 - self.BLANK_LINES_BASE
         self.wCommand.rely = self.lines - 1 - self.BLANK_LINES_BASE
+        self.users.relx = self.columns - self.USERS_COLUMNS
 
 
 class User:
