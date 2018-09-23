@@ -4,6 +4,8 @@ import curses
 import logging
 import os
 
+import patches
+
 
 class TabWidget(npyscreen.widget.Widget):
     def __init__(self, screen, **keywords):
@@ -123,6 +125,8 @@ class User:
 
 class ChatApp(npyscreen.StandardApp):
     MESSAGE_FORMAT = "{datetime:%H:%M:%S} {author}: {text}"
+
+    MAINQUEUE_TYPE = patches.NPSEventQueue
 
     def __init__(self, chat):
         super().__init__()
