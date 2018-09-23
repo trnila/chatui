@@ -8,6 +8,10 @@ import os
 class TabWidget(npyscreen.widget.Widget):
     def __init__(self, screen, **keywords):
         super().__init__(screen, **keywords)
+        
+    def set_up_handlers(self):
+        super(TabWidget, self).set_up_handlers()
+        del self.handlers['^P']
 
     def update(self, clear=True):
         x = 0
@@ -53,7 +57,7 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
             editable=False
         )
 
-        self.add(TabWidget)
+        self.add(TabWidget, editable=False)
 
         self.wMain = self.add(
             npyscreen.wgmultiline.BufferPager,
@@ -123,6 +127,8 @@ class ChatApp(npyscreen.StandardApp):
     def setup_chat(self, F, channel):
         F.wStatus1.value = channel
         F.wCommand.add_handlers({curses.ascii.NL: self.entered})
+        del F.wCommand.handlers['^P']
+        del F.users.handlers['^P']
         F.users.add_handlers({curses.ascii.NL: self.open_chat})
         F.add_handlers({
             "^P": self.next_chat
