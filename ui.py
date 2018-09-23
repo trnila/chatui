@@ -122,7 +122,7 @@ class ChatApp(npyscreen.StandardApp):
         self.add_event_hander("private_message", self.on_private_message)
 
     def setup_chat(self, F, channel):
-        F.wCommand.add_handlers({curses.ascii.NL: self.entered})
+        F.wCommand.add_handlers({curses.ascii.NL: lambda x: self.entered()})
         del F.wCommand.handlers['^P']
         del F.users.handlers['^P']
 
@@ -131,12 +131,12 @@ class ChatApp(npyscreen.StandardApp):
 
         F.users.add_handlers({curses.ascii.NL: self.open_chat})
         F.add_handlers({
-            "^P": self.next_chat,
-            '^W': self.close_current_window
+            "^P": lambda x: self.next_chat(),
+            '^W': lambda x: self.close_current_window()
         })
         F.wStatus2.value = f"({self.chat.username}) "
 
-    def entered(self, nop):
+    def entered(self):
         try:
             F = self.get_active_chat()
             message = F.wCommand.value.strip()
@@ -168,7 +168,7 @@ class ChatApp(npyscreen.StandardApp):
     def get_active_chat(self):
         return self.getForm(self.opened_chats[self.current_chat])
 
-    def next_chat(self, nop=None):
+    def next_chat(self):
         self.current_chat = (self.current_chat + 1) % len(self.opened_chats)
         self.switchForm(self.opened_chats[self.current_chat])
 
@@ -209,7 +209,7 @@ class ChatApp(npyscreen.StandardApp):
     def send(self, event, payload):
         self.queue_event(npyscreen.Event(event, payload))
 
-    def close_current_window(self, nop=None):
+    def close_current_window(self):
         channel_name = self.opened_chats[self.current_chat]
         if channel_name == 'MAIN':
             return
