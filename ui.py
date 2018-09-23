@@ -33,6 +33,24 @@ class TabWidget(npyscreen.widget.Widget):
             x += len(label) + 2
 
 
+class UsersInRoomWidget(npyscreen.wgmultiline.MultiLine):
+    def _print_line(self, line, value_indexer):
+        super(UsersInRoomWidget, self)._print_line(line, value_indexer)
+        if not self.do_colors() or not line.value:
+            return
+
+        status, username = line.value.split(' ', 2)
+
+        line.show_bold = True
+        if status == '[online]':
+            line.color = 'IMPORTANT'
+            line.value = username
+        elif status == '[offline]':
+            line.color = 'DANGER'
+            line.value = username
+        else:
+            logging.warning("Unknown user %s status %s", username, status)
+
 class ChatForm(npyscreen.fmForm.FormBaseNew):
     BLANK_LINES_BASE = 0
     BLANK_COLUMNS_RIGHT = 0
@@ -76,7 +94,7 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
         )
 
         self.users = self.add(
-            npyscreen.wgmultiline.MultiLine,
+            UsersInRoomWidget,
             rely=1,
             relx=self.columns - self.USERS_COLUMNS, max_height=-2
         )
