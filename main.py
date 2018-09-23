@@ -79,8 +79,12 @@ class Chat:
                     logging.info("msg not for me!")
                     return
 
-                timestamp, text = msg.payload.decode('utf-8').split(' ', 1)
-                date = datetime.datetime.fromtimestamp(int(timestamp))
+                try:
+                    timestamp, text = msg.payload.decode('utf-8').split(' ', 1)
+                    date = datetime.datetime.fromtimestamp(int(timestamp))
+                except ValueError:
+                    text = msg.payload.decode('utf-8')
+                    date = datetime.datetime.now()
                 logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
 
                 self.subscriber.send("private_message", {
