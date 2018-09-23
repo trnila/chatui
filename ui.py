@@ -100,6 +100,8 @@ class User:
 
 
 class ChatApp(npyscreen.StandardApp):
+    MESSAGE_FORMAT = "{datetime:%H:%M:%S} {author}: {text}"
+
     def __init__(self, chat):
         super().__init__()
         self.chat = chat
@@ -184,13 +186,13 @@ class ChatApp(npyscreen.StandardApp):
 
     def on_message(self, evt):
         F = self.getForm("MAIN")
-        F.wMain.buffer(["{datetime:%H:%M:%S} {author}: {text}".format(**evt.payload)], True, True)
+        F.wMain.buffer([self.MESSAGE_FORMAT.format(**evt.payload)], True, True)
         F.wMain.update()
         F.wMain.display()
 
     def on_private_message(self, evt):
         F = self.get_chat(evt.payload['channel'])
-        F.wMain.buffer(["{datetime} {author}: {text}".format(**evt.payload)], True, True)
+        F.wMain.buffer([self.MESSAGE_FORMAT.format(**evt.payload)], True, True)
         F.wMain.display()
 
     def send(self, event, payload):
