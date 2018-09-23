@@ -2,6 +2,7 @@
 import npyscreen
 import curses
 import logging
+import os
 
 
 class TabWidget(npyscreen.widget.Widget):
@@ -86,9 +87,12 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
 
     def resize(self):
         super(ChatForm, self).resize()
-        MAXY, MAXX = self.lines, self.columns
-        self.wStatus2.rely = MAXY - 2 - self.BLANK_LINES_BASE
-        self.wCommand.rely = MAXY - 1 - self.BLANK_LINES_BASE
+        size = os.get_terminal_size()
+        self.lines = size.lines
+        self.columns = size.columns
+
+        self.wStatus2.rely = self.lines - 2 - self.BLANK_LINES_BASE
+        self.wCommand.rely = self.lines - 1 - self.BLANK_LINES_BASE
 
 
 class User:
