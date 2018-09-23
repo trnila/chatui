@@ -49,14 +49,6 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
 
     def create(self):
         MAXY, MAXX = self.lines, self.columns
-
-        self.wStatus1 = self.add(
-            npyscreen.wgtextbox.Textfield,
-            rely=0,
-            relx=0,
-            editable=False
-        )
-
         self.add(TabWidget, editable=False)
 
         self.wMain = self.add(
@@ -85,7 +77,6 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
             rely=0,
             relx=self.columns - self.USERS_COLUMNS, max_height=-2, )
 
-        self.wStatus1.important = True
         self.wStatus2.important = True
         self.nextrely = 2
 
@@ -125,7 +116,6 @@ class ChatApp(npyscreen.StandardApp):
         self.add_event_hander("private_message", self.on_private_message)
 
     def setup_chat(self, F, channel):
-        F.wStatus1.value = channel
         F.wCommand.add_handlers({curses.ascii.NL: self.entered})
         del F.wCommand.handlers['^P']
         del F.users.handlers['^P']
@@ -151,7 +141,12 @@ class ChatApp(npyscreen.StandardApp):
                 else:
                     logging.info("Unknown command %s", cmd)
             else:
-                self.chat.send(message, F.wStatus1.value.replace('#', ''))
+                dst = self.opened_chats[self.current_chat]
+                if dst == 'MAIN':
+                    dst = 'all'
+                else:
+                    dst = dst.replace('CHAT/', '')
+                self.chat.send(message, dst)
             F.wCommand.value = ""
             F.wMain.update()
         except Exception as e:
