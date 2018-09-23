@@ -13,6 +13,7 @@ class Chat:
         self.username = options.username
         self.options = options
 
+        self.users = {}
 
         self.client = mqtt.Client(client_id=self.username)
         self.client.on_connect = self._on_connect
@@ -58,6 +59,9 @@ class Chat:
                 author = msg.topic.replace('/mschat/status/', '')
                 status = msg.payload.decode('utf-8')
                 logging.debug("**** User {} is now {}".format(author, status))
+
+                self.users[author] = status
+
                 self.subscriber.send("status", {
                     'user': author,
                     'status': status

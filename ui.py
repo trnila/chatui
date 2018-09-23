@@ -178,7 +178,7 @@ class ChatApp(npyscreen.StandardApp):
 
     def on_status(self, evt):
         F = self.getForm("MAIN")
-        F.users.values.append(User(evt.payload['user'], evt.payload['status']))
+        F.users.values = [User(user, status) for user, status in self.chat.users.items()]
         F.users.display()
 
     def on_message(self, evt):
