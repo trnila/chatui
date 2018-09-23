@@ -47,6 +47,9 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
         self.curses_pad.hline(0, 0, curses.ACS_HLINE, MAXX - 1)
         self.curses_pad.hline(MAXY - 2 - self.BLANK_LINES_BASE, 0, curses.ACS_HLINE, MAXX - 1)
 
+        if not self.users.hidden:
+            self.curses_pad.vline(1, MAXX - self.USERS_COLUMNS - 1, curses.ACS_VLINE, MAXY - 3)
+
     def create(self):
         MAXY, MAXX = self.lines, self.columns
         self.add(TabWidget, editable=False)
@@ -56,7 +59,7 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
             rely=1,
             relx=0,
             max_height=-2,
-            max_width=self.columns - self.USERS_COLUMNS,
+            max_width=self.columns - self.USERS_COLUMNS - 1,
             autowrap=True
         )
 
@@ -74,8 +77,9 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
 
         self.users = self.add(
             npyscreen.wgmultiline.MultiLine,
-            rely=0,
-            relx=self.columns - self.USERS_COLUMNS, max_height=-2, )
+            rely=1,
+            relx=self.columns - self.USERS_COLUMNS, max_height=-2
+        )
 
         self.wStatus2.important = True
         self.nextrely = 2
@@ -121,6 +125,10 @@ class ChatApp(npyscreen.StandardApp):
         F.wCommand.add_handlers({curses.ascii.NL: self.entered})
         del F.wCommand.handlers['^P']
         del F.users.handlers['^P']
+
+        if channel != '#all':
+            F.users.hidden = True
+
         F.users.add_handlers({curses.ascii.NL: self.open_chat})
         F.add_handlers({
             "^P": self.next_chat
