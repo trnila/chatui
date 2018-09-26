@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import threading
-import argparse
-import random
 import ui
 import logging
 import args
 
 from chat import Chat
 
-logging.basicConfig(level=logging.DEBUG, filename='/tmp/log')
-
 
 parser = args.create_parser()
+options = parser.parse_args()
+
+logging.basicConfig(level=logging.DEBUG, filename=options.log_file)
+
 chat = Chat(parser.parse_args())
 App = ui.ChatApp(chat)
 
