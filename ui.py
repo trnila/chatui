@@ -134,7 +134,7 @@ class ChatApp(npyscreen.StandardApp):
     def __init__(self, chat):
         super().__init__()
         self.chat = chat
-        self.chat.subscriber = self
+        self.chat.subscriber = self.send
         self.opened_chats = ['MAIN']
         self.current_chat = 0
 

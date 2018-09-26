@@ -4,6 +4,12 @@ import logging
 import paho.mqtt.client as mqtt
 
 
+class Event:
+    STATUS = 'status'
+    PM = 'private_message'
+    NEW_MESSAGE = 'new_message'
+
+
 class Chat:
     def __init__(self, options):
         self.username = options.username
@@ -16,6 +22,7 @@ class Chat:
         self.client.on_message = self._on_message
 
         self.client.will_set(f'/mschat/status/{self.username}', 'offline', qos=2, retain=True)
+        self.subscriber = None
 
     def connect(self):
         try:
@@ -24,9 +31,9 @@ class Chat:
             logging.exception(e)
         self.client.loop_forever()
 
-    def send(self, text, dst):
+    def send(self, text, dst = 'all'):
         if dst != 'all':
-            self.subscriber.send("private_message", {
+            self.subscriber("private_message", {
                 'datetime': datetime.datetime.now(),
                 'channel': dst,
                 'author': self.username,
@@ -52,7 +59,7 @@ class Chat:
                 date = datetime.datetime.fromtimestamp(int(timestamp))
                 logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
 
-                self.subscriber.send("new_message", {
+                self.subscriber(Event.NEW_MESSAGE, {
                     'datetime': date,
                     'author': author,
                     'text': text
@@ -64,7 +71,7 @@ class Chat:
 
                 self.users[author] = status
 
-                self.subscriber.send("status", {
+                self.subscriber(Event.STATUS, {
                     'user': author,
                     'status': status
                 })
@@ -88,7 +95,7 @@ class Chat:
                     date = datetime.datetime.now()
                 logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
 
-                self.subscriber.send("private_message", {
+                self.subscriber(Event.PM, {
                     'datetime': date,
                     'channel': author,
                     'author': sender,
