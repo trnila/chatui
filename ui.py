@@ -74,7 +74,7 @@ class ChatForm(npyscreen.fmForm.FormBaseNew):
 
     def create(self):
         MAXY, MAXX = self.lines, self.columns
-        self.add(TabWidget, editable=False)
+        self.tabs = self.add(TabWidget, editable=False)
 
         self.wMain = self.add(
             npyscreen.wgmultiline.BufferPager,
@@ -241,6 +241,7 @@ class ChatApp(npyscreen.StandardApp):
 
     def on_private_message(self, evt):
         self.add_message_to_buffer(self.get_chat(evt.payload['channel']), evt)
+        self.get_active_chat().tabs.update()
 
     def send(self, event, payload):
         self.queue_event(npyscreen.Event(event, payload))
