@@ -33,7 +33,7 @@ class Chat:
 
     def send(self, text, dst = 'all'):
         if dst != 'all':
-            self.subscriber("private_message", {
+            self.subscriber(Event.PM, {
                 'datetime': datetime.datetime.now(),
                 'channel': dst,
                 'author': self.username,
@@ -55,8 +55,7 @@ class Chat:
         try:
             if msg.topic.startswith("/mschat/all"):
                 author = msg.topic.replace('/mschat/all/', '')
-                timestamp, text = msg.payload.decode('utf-8').split(' ', 1)
-                date = datetime.datetime.fromtimestamp(int(timestamp))
+                date, text = self.parse_message(msg)
                 logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
 
                 self.subscriber(Event.NEW_MESSAGE, {
@@ -87,12 +86,7 @@ class Chat:
                     logging.info("msg not for me!")
                     return
 
-                try:
-                    timestamp, text = msg.payload.decode('utf-8').split(' ', 1)
-                    date = datetime.datetime.fromtimestamp(int(timestamp))
-                except ValueError:
-                    text = msg.payload.decode('utf-8')
-                    date = datetime.datetime.now()
+                date, text = self.parse_message(msg)
                 logging.debug("{:%H:%M:%S} <{}>: {}".format(date, author, text))
 
                 self.subscriber(Event.PM, {
@@ -105,3 +99,12 @@ class Chat:
                 logging.debug(msg.topic, msg.payload)
         except Exception as e:
             logging.exception(e)
+
+    def parse_message(self, line):
+        try:
+            timestamp, text = line.payload.decode('utf-8').split(' ', 1)
+            date = datetime.datetime.fromtimestamp(int(timestamp))
+            return date, text
+        except ValueError as e:
+            logging.error(e)
+            return datetime.datetime.now(), line.payload.decode('utf-8')
