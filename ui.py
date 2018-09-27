@@ -4,6 +4,7 @@ import curses
 import logging
 import os
 
+import notifications
 import patches
 
 
@@ -143,6 +144,7 @@ class ChatApp(npyscreen.StandardApp):
         self.chat.subscriber = self.send
         self.opened_chats = ['MAIN']
         self.current_chat = 0
+        self.notifications = notifications.NotifySendNotification()
 
     def onStart(self):
         F = self.addForm("MAIN", ChatForm)
@@ -241,6 +243,15 @@ class ChatApp(npyscreen.StandardApp):
             )
         ], True, True)
         F.wMain.update()
+
+        if evt.payload['author'] != self.chat.username:
+            self.notifications.send(
+                "{}<{}>: {}".format(
+                    '#all ' if 'channel' not in evt.payload else '',
+                    User.normalize_username(evt.payload['author']),
+                    evt.payload['text']
+                )
+            )
 
     def on_private_message(self, evt):
         self.add_message_to_buffer(self.get_chat(evt.payload['channel']), evt)
