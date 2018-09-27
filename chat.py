@@ -31,6 +31,10 @@ class Chat:
             logging.exception(e)
         self.client.loop_forever()
 
+    def disconnect(self):
+        self.client.publish(f'/mschat/status/{self.username}', 'offline', qos=2, retain=True).wait_for_publish()
+        self.client.disconnect()
+
     def send(self, text, dst = 'all'):
         if dst != 'all':
             self.subscriber(Event.PM, {

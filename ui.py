@@ -182,6 +182,9 @@ class ChatApp(npyscreen.StandardApp):
                     self.chat.send(' '.join(args[1:]), args[0])
                 elif cmd == '/close':
                     self.close_current_window()
+                elif cmd == '/quit':
+                    self.chat.disconnect()
+                    exit(0)
                 else:
                     logging.info("Unknown command %s", cmd)
             else:
