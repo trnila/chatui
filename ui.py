@@ -31,6 +31,7 @@ class TabWidget(npyscreen.widget.Widget):
             else:
                 label = item.replace('CHAT/', '')
 
+            label = User.normalize_username(label)
             self.parent.curses_pad.addstr(0, x, label, color)
             x += len(label) + 2
 
@@ -52,6 +53,7 @@ class UsersInRoomWidget(npyscreen.wgmultiline.MultiLine):
             line.value = username
         else:
             logging.warning("Unknown user %s status %s", username, status)
+
 
 class ChatForm(npyscreen.fmForm.FormBaseNew):
     BLANK_LINES_BASE = 0
@@ -122,8 +124,12 @@ class User:
         self.user = user
         self.status = status
 
+    @staticmethod
+    def normalize_username(username):
+        return username[0:10] + (username[10:] and '...')
+
     def __str__(self):
-        return f"[{self.status}] {self.user}"
+        return f"[{self.status}] {User.normalize_username(self.user)}"
 
 
 class ChatApp(npyscreen.StandardApp):
@@ -159,7 +165,7 @@ class ChatApp(npyscreen.StandardApp):
             "^P": lambda x: self.next_chat(),
             '^W': lambda x: self.close_current_window()
         })
-        F.wStatus2.value = f"({self.chat.username}) "
+        F.wStatus2.value = f"({User.normalize_username(self.chat.username)}) "
 
     def entered(self):
         try:
@@ -221,14 +227,20 @@ class ChatApp(npyscreen.StandardApp):
         F.users.update()
 
     def on_message(self, evt):
-        F = self.getForm("MAIN")
-        F.wMain.buffer([self.MESSAGE_FORMAT.format(**evt.payload)], True, True)
+        self.add_message_to_buffer(self.getForm("MAIN"), evt)
+
+    def add_message_to_buffer(self, F, evt):
+        F.wMain.buffer([
+            self.MESSAGE_FORMAT.format(
+                datetime=evt.payload['datetime'],
+                author=User.normalize_username(evt.payload['author']),
+                text=evt.payload['text']
+            )
+        ], True, True)
         F.wMain.update()
 
     def on_private_message(self, evt):
-        F = self.get_chat(evt.payload['channel'])
-        F.wMain.buffer([self.MESSAGE_FORMAT.format(**evt.payload)], True, True)
-        F.wMain.update()
+        self.add_message_to_buffer(self.get_chat(evt.payload['channel']), evt)
 
     def send(self, event, payload):
         self.queue_event(npyscreen.Event(event, payload))
