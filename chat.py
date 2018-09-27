@@ -17,7 +17,7 @@ class Chat:
 
         self.users = {}
 
-        self.client = mqtt.Client(client_id=self.username)
+        self.client = mqtt.Client(client_id=self.username, clean_session=False)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
 
