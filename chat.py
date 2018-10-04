@@ -16,13 +16,17 @@ class Chat:
         self.options = options
 
         self.users = {}
+        self.connected = True
 
         self.client = mqtt.Client(client_id=self.username, clean_session=False)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
+        self.client.on_disconnect = self._on_disconnect
 
         self.client.will_set(f'/mschat/status/{self.username}', 'offline', qos=2, retain=True)
         self.subscriber = None
+
+        self.queue = []
 
     def connect(self):
         try:
@@ -36,24 +40,38 @@ class Chat:
         self.client.disconnect()
 
     def send(self, text, dst = 'all'):
-        if dst != 'all':
-            self.subscriber(Event.PM, {
-                'datetime': datetime.datetime.now(),
-                'channel': dst,
-                'author': self.username,
-                'text': text
-            })
-            dst = f'user/{dst}'
-        msg = "{} {}".format(int(time.time()), text)
-        self.client.publish(f'/mschat/{dst}/{self.username}', msg)
+        if not self.connected:
+            logging.info("Offline, will send on reconnect")
+            self.queue.append((text, dst))
+        else:
+            if dst != 'all':
+                self.subscriber(Event.PM, {
+                    'datetime': datetime.datetime.now(),
+                    'channel': dst,
+                    'author': self.username,
+                    'text': text
+                })
+                dst = f'user/{dst}'
+            msg = "{} {}".format(int(time.time()), text)
+            self.client.publish(f'/mschat/{dst}/{self.username}', msg)
 
     def _on_connect(self, client, userdata, flags, rc):
         try:
             logging.debug("Connected")
             client.subscribe("/mschat/#")
             client.publish(f'/mschat/status/{self.username}', 'online', qos=2, retain=True)
+            self.connected = True
+
+            for (text, dst) in self.queue:
+                logging.info("Resending %s after reconnect", text)
+                self.send(text, dst)
+
         except Exception as e:
             logging.exception(e)
+
+    def _on_disconnect(self, client, userdata, rc):
+        logging.debug("Disconnected")
+        self.connected = False
 
     def _on_message(self, client, userdata, msg):
         try:
@@ -87,7 +105,7 @@ class Chat:
                 elif sender == self.username:
                     author = receiver
                 else:
-                    logging.info("msg not for me!")
+                    # msg not for me
                     return
 
                 date, text = self.parse_message(msg)
@@ -110,5 +128,4 @@ class Chat:
             date = datetime.datetime.fromtimestamp(int(timestamp))
             return date, text
         except ValueError as e:
-            logging.error(e)
             return datetime.datetime.now(), line.payload.decode('utf-8')
