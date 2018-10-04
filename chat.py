@@ -1,3 +1,4 @@
+import threading
 import time
 import datetime
 import logging
@@ -35,6 +36,8 @@ class Chat:
 
         self.queue = []
 
+        self.disconnect_timer = None
+
     def connect(self):
         for user, status in self.users.items():
             self.subscriber(Event.STATUS, {
@@ -71,6 +74,8 @@ class Chat:
     def _on_connect(self, client, userdata, flags, rc):
         try:
             logging.debug("Connected")
+            if self.disconnect_timer:
+                self.disconnect_timer.cancel()
             client.subscribe("/mschat/#")
             client.publish(f'/mschat/status/{self.username}', 'online', qos=2, retain=True)
             self.connected = True
@@ -82,9 +87,22 @@ class Chat:
         except Exception as e:
             logging.exception(e)
 
+    def disconnect_all(self):
+        for username in self.users.keys():
+            if self.users[username] != 'offline':
+                self.users[username] = 'offline'
+                self.subscriber(Event.STATUS, {
+                    'user': username,
+                    'status': 'offline'
+                })
+
+        self.persist_users()
+
     def _on_disconnect(self, client, userdata, rc):
         logging.debug("Disconnected")
         self.connected = False
+        self.disconnect_timer = threading.Timer(3, self.disconnect_all)
+        self.disconnect_timer.start()
 
     def _on_message(self, client, userdata, msg):
         try:
@@ -104,9 +122,7 @@ class Chat:
                 logging.debug("**** User {} is now {}".format(author, status))
 
                 self.users[author] = status
-
-                with open(self.users_path, 'wb') as f:
-                    pickle.dump(self.users, f)
+                self.persist_users()
 
                 self.subscriber(Event.STATUS, {
                     'user': author,
@@ -145,3 +161,7 @@ class Chat:
             return date, text
         except ValueError as e:
             return datetime.datetime.now(), line.payload.decode('utf-8')
+
+    def persist_users(self):
+        with open(self.users_path, 'wb') as f:
+            pickle.dump(self.users, f)
