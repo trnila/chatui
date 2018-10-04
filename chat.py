@@ -1,6 +1,7 @@
 import time
 import datetime
 import logging
+import pickle
 import paho.mqtt.client as mqtt
 
 
@@ -15,8 +16,14 @@ class Chat:
         self.username = options.username
         self.options = options
 
-        self.users = {}
         self.connected = True
+        self.users_path = '/tmp/users'
+
+        try:
+            with open(self.users_path, "rb") as f:
+                self.users = pickle.load(f)
+        except:
+            self.users = {}
 
         self.client = mqtt.Client(client_id=self.username, clean_session=False)
         self.client.on_connect = self._on_connect
@@ -29,6 +36,12 @@ class Chat:
         self.queue = []
 
     def connect(self):
+        for user, status in self.users.items():
+            self.subscriber(Event.STATUS, {
+                'user': user,
+                'status': status
+            })
+
         try:
             self.client.connect(self.options.server, self.options.port, 60)
         except ConnectionRefusedError as e:
@@ -91,6 +104,9 @@ class Chat:
                 logging.debug("**** User {} is now {}".format(author, status))
 
                 self.users[author] = status
+
+                with open(self.users_path, 'wb') as f:
+                    pickle.dump(self.users, f)
 
                 self.subscriber(Event.STATUS, {
                     'user': author,
