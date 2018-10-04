@@ -46,6 +46,7 @@ class Chat:
             })
 
         try:
+            self.client.tls_set(ca_certs="/etc/mosquitto/ca.crt")
             self.client.connect(self.options.server, self.options.port, 60)
         except ConnectionRefusedError as e:
             logging.exception(e)
